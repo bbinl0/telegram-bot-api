@@ -1,38 +1,24 @@
-FROM ubuntu:22.04
+# Telegram Local Bot API server (official image)
+FROM ghcr.io/tdlib/telegram-bot-api:latest
 
-# Install dependencies
-RUN apt-get update && apt-get install -y \
-    git \
-    cmake \
-    g++ \
-    make \
-    zlib1g-dev \
-    libssl-dev \
-    gperf \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+# ── আপনার হার্ডকোড করা ক্রেডেনশিয়াল ──
+ENV TELEGRAM_API_ID=27815887
+ENV TELEGRAM_API_HASH=dbb31988b20945abd1ee1311f543b19f
 
-# Clone and build Telegram Bot API
-RUN git clone --recursive https://github.com/tdlib/telegram-bot-api.git /telegram-bot-api && \
-    cd /telegram-bot-api && \
-    mkdir build && \
-    cd build && \
-    cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX:PATH=/usr/local .. && \
-    cmake --build . --target install && \
-    cd / && \
-    rm -rf /telegram-bot-api
+# ক্যাশ/ডেটা ডিরেক্টরি (ইমেজে ডিফল্টও এইটা)
+ENV TELEGRAM_DIR=/var/lib/telegram-bot-api
 
-# Create working directory
-RUN mkdir -p /var/lib/telegram-bot-api
-
-# Expose port
+# Railway সাধারণত $PORT দেয়; না পেলে 8081 ধরবে
 EXPOSE 8081
 
-# Start the server
-CMD telegram-bot-api \
+# সবকিছু অটো-স্টার্ট: Local Bot API সার্ভার 0.0.0.0:$PORT এ bind হবে
+# --dir দিয়ে ডেটা/ক্যাশ লোকেশন সেট; -v 3 = একটু বেশি লগ
+CMD ["/bin/sh","-c", "\
+  telegram-bot-api --local \
     --api-id=${TELEGRAM_API_ID} \
     --api-hash=${TELEGRAM_API_HASH} \
-    --local \
-    --http-port=8081 \
-    --dir=/var/lib/telegram-bot-api \
-    --verbosity=2
+    --http-ip-address=0.0.0.0 \
+    --http-port=${PORT:-8081} \
+    --dir=${TELEGRAM_DIR} \
+    -v 3 \
+"]

@@ -1,0 +1,18 @@
+# Optimized Dockerfile for Railway - Uses pre-built image
+FROM aiogram/telegram-bot-api:latest
+
+# Railway uses dynamic PORT, so we need to use it
+# But telegram-bot-api uses --http-port flag, so we'll use 8080 (Railway's default)
+EXPOSE 8080
+
+# Note: No HEALTHCHECK needed - Railway will detect HTTP server on port 8080
+# The telegram-bot-api server responds to any bot API request as health indicator
+
+# Start the server with Railway-compatible settings
+CMD telegram-bot-api \
+    --api-id=${TELEGRAM_API_ID} \
+    --api-hash=${TELEGRAM_API_HASH} \
+    --local \
+    --http-port=8080 \
+    --dir=/var/lib/telegram-bot-api \
+    --verbosity=2
